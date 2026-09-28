@@ -1,0 +1,25 @@
+{
+  "sla_name": "OpenStack-SLA-Daily",
+  "version": "1.0",
+  "description": "SLA de l'environnement OpenStack local (DevStack) : disponibilite des API et des instances",
+  "evaluation_period": "daily",
+  "availability_target": 99.5,
+  "monitoring_interval_minutes": 5,
+  "services": ["nova", "neutron", "keystone"],
+  "optional_services": ["ceilometer"],
+  "metrics": ["uptime", "network_latency", "instance_status"],
+  "availability_definition": "Un echantillon (toutes les 5 min) est 'disponible' si Keystone, Nova et Neutron repondent correctement et si aucune instance n'est en etat ERROR. Disponibilite journaliere = echantillons disponibles / echantillons du jour.",
+  "thresholds": {
+    "request_timeout_seconds": 10,
+    "api_latency_warning_ms": 2000,
+    "network_latency_warning_ms": 200,
+    "network_probe_port": 22
+  },
+  "alert_on_violation": true,
+  "violation_actions": [
+    "ecrire l'alerte dans reports/alerts.log",
+    "generer le rapport reports/sla_report_<date>.txt",
+    "retourner le code de sortie 2 (exploitable par Jenkins)"
+  ],
+  "last_report": null
+}

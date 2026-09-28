@@ -1,7 +1,27 @@
-﻿venv/
+# Python
+venv/
 __pycache__/
 *.pyc
+
+# Archives
 *.tar.gz
+
+# Terraform (l'etat contient des secrets ; .terraform.lock.hcl reste versionne)
 .terraform/
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
+*.tfvars
+crash.log
+
+# Identifiants et cles (ne jamais versionner)
+sla.env
+.env
+*.pem
+mykey
+mykey.*
+id_rsa*
+
+# Donnees generees par le script SLA
+monitoring/data/
+monitoring/reports/
+monitoring/*.log
