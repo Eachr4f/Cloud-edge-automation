@@ -25,3 +25,7 @@ id_rsa*
 monitoring/data/
 monitoring/reports/
 monitoring/*.log
+
+ansible/inventory.ini
+tfplan
+reports/
