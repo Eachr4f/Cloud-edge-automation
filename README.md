@@ -7,6 +7,7 @@
 ![Flask](https://img.shields.io/badge/App-Flask-000000?logo=flask&logoColor=white)
 ![Fedora](https://img.shields.io/badge/Host-Fedora-51A2DA?logo=fedora&logoColor=white)
 
+<p align="center"> <img src="images/openstack.png" alt="OpenStack" width="400"> </p>
 
 **Contrainte du projet** : toutes les installations sont réalisées **localement** (VirtualBox / VM locales). Aucun cloud externe (AWS, Azure, GCP...) n'est utilisé.
 
