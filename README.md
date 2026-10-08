@@ -8,7 +8,6 @@
 ![Fedora](https://img.shields.io/badge/Host-Fedora-51A2DA?logo=fedora&logoColor=white)
 
 
-
 **Contrainte du projet** : toutes les installations sont réalisées **localement** (VirtualBox / VM locales). Aucun cloud externe (AWS, Azure, GCP...) n'est utilisé.
 
 ---
@@ -40,6 +39,51 @@ Ce projet met en place un **cloud privé IaaS** avec OpenStack (DevStack), puis 
 | 3 | **SLA & supervision** | Cahier des charges | Disponibilité >= 99,5 % / jour, script Python toutes les 5 min |
 | 4 | **Jenkins** | Ajout personnel | Pipeline CI/CD : Git, Terraform, test, rapport |
 
+### Contexte
+
+Le cloud computing permet de louer des ressources informatiques (calcul, réseau, stockage) à la demande, sans gérer le matériel physique. Les grands fournisseurs publics (AWS, Azure, GCP) proposent ce service, mais ce projet se déroule dans un cadre pédagogique avec une contrainte : tout doit être installé en local. L'objectif est donc de reconstruire, sur un seul PC, le fonctionnement d'un cloud et de comprendre ce qui se passe derrière une console cloud classique.
+
+### Objectif
+
+Montrer qu'on peut passer d'une infrastructure créée à la main à une infrastructure entièrement pilotée par du code et surveillée automatiquement :
+
+- construire un cloud privé avec **OpenStack**, l'équivalent open source d'AWS
+- y créer des machines virtuelles de façon manuelle, pour comprendre chaque brique (compute, réseau, clés SSH, sécurité)
+- automatiser cette création avec du code (**Terraform**)
+- mesurer en continu la qualité du service avec un **SLA** et un script de supervision
+- enchaîner toutes ces étapes dans un pipeline **Jenkins**, déclenché par un simple `git push`
+
+### Principe de fonctionnement
+
+1. **OpenStack** fournit le cloud : Keystone gère l'authentification, Nova les machines virtuelles, Neutron le réseau et Horizon l'interface web.
+2. Dans ce cloud, deux modèles de service sont illustrés. L'**IaaS** : l'utilisateur obtient une VM brute (CirrOS) et la gère lui-même. Le **SaaS** : une application web Flask est déployée sur une VM Ubuntu et utilisée via le navigateur.
+3. **Terraform** décrit l'infrastructure dans un fichier (`main.tf`) au lieu de cliquer dans Horizon. La même description produit toujours la même VM CentOS, et peut être versionnée dans Git.
+4. Un **SLA** (Service Level Agreement) fixe l'engagement de qualité : 99,5 % de disponibilité par jour. Un script Python, exécuté toutes les 5 minutes, interroge les API OpenStack, calcule le taux d'instances actives et écrit le verdict dans `sla.json`.
+5. **Jenkins** orchestre l'ensemble : à chaque modification poussée sur GitHub, il récupère le code, valide les fichiers Terraform, crée ou met à jour la VM, teste qu'elle répond, puis archive un rapport. En cas d'échec, l'incident est journalisé comme violation potentielle du SLA.
+
+### Pourquoi cette approche
+
+| Pratique | Bénéfice |
+|---|---|
+| Infrastructure as Code | Reproductible, versionnée, sans manipulation manuelle |
+| CI/CD | Chaque modification est validée et déployée de la même manière |
+| Supervision avec SLA | La qualité du service est mesurée et non supposée |
+| Étape manuelle avant l'automatisation | On comprend ce que l'automatisation fait à notre place |
+
+### Technologies utilisées
+
+| Technologie | Utilisation dans le projet |
+|---|---|
+| VirtualBox | Hyperviseur qui héberge la VM Ubuntu de DevStack |
+| DevStack / OpenStack | Cloud privé (Keystone, Nova, Neutron, Horizon) |
+| CirrOS, Ubuntu, CentOS | Images des instances créées dans OpenStack |
+| Flask (Python) | Application web déployée en SaaS |
+| Terraform | Provisionnement automatique de la VM CentOS |
+| Python + openstacksdk | Script de surveillance du SLA |
+| cron | Exécution du script toutes les 5 minutes |
+| Jenkins | Pipeline CI/CD |
+| Git / GitHub | Versionnement du code et déclencheur du pipeline |
+
 ---
 
 ## 2. Architecture
@@ -60,30 +104,7 @@ flowchart LR
 
 ### Infrastructure
 
-```mermaid
-flowchart TB
-    subgraph HOTE[Hôte Fedora]
-        TF[Terraform]
-        BR[Navigateur / client SSH]
-        subgraph VBOX[VirtualBox]
-            subgraph UB[VM Ubuntu 22.04 - DevStack]
-                KS[Keystone]
-                NO[Nova]
-                NE[Neutron]
-                HZ[Horizon / Apache]
-                subgraph INST[Instances OpenStack]
-                    CI[CirrOS - IaaS]
-                    UBV[Ubuntu - SaaS Flask]
-                    CE[CentOS - Terraform]
-                end
-            end
-            JK[Jenkins]
-        end
-    end
-    TF -->|API OpenStack| KS
-    JK --> TF
-    BR --> HZ
-```
+![Schéma de l'infrastructure](images/infrastructure.png)
 
 | Couche | Outil | Rôle |
 |---|---|---|
@@ -99,6 +120,8 @@ flowchart TB
 ```
 cloud-edge-project/
 ├── README.md
+├── images/
+│   └── infrastructure.png     # Schéma de l'infrastructure
 ├── terraform/
 │   └── main.tf                # VM CentOS sur OpenStack
 ├── app/
